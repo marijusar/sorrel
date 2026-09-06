@@ -4,19 +4,21 @@ import { LoggerFactory } from "@/logging/logger";
 import { PlanLimitRepository } from "@/modules/billing/plan-limit-repository";
 import { PlanRepository } from "@/modules/billing/plan-repository";
 
-// Prices and limits mirror the landing page's TIERS
-// (apps/frontend/src/app/(marketing)/page.tsx) — "N stores unlocked per
-// month" there is read as a concurrent tracked-store cap for v1 (no monthly
-// reset, no unlock mechanic yet).
-//
-// stripePriceId values are Stripe TEST-mode price IDs — repoint before
-// going live.
+// A yearly plan is its own plan row (slug suffixed "-yearly"), not a field
+// on the monthly one. stripePriceId values are Stripe TEST-mode — repoint before going live.
 const PLANS = [
   {
     slug: "starter",
     name: "Starter",
     monthlyPriceCents: 4900,
     stripePriceId: "price_1UADuYJT5wh1YJ9eZBoewlvd",
+    trackedStoresLimit: 100,
+  },
+  {
+    slug: "starter-yearly",
+    name: "Starter",
+    monthlyPriceCents: 4165,
+    stripePriceId: "price_1UCakkJT5wh1YJ9eoBzpTj9G",
     trackedStoresLimit: 100,
   },
   {
@@ -27,10 +29,24 @@ const PLANS = [
     trackedStoresLimit: 500,
   },
   {
+    slug: "growth-yearly",
+    name: "Growth",
+    monthlyPriceCents: 12665,
+    stripePriceId: "price_1UCakkJT5wh1YJ9e5L41h0n9",
+    trackedStoresLimit: 500,
+  },
+  {
     slug: "scale",
     name: "Scale",
     monthlyPriceCents: 39900,
     stripePriceId: "price_1UADulJT5wh1YJ9eiQzvC6wC",
+    trackedStoresLimit: 2000,
+  },
+  {
+    slug: "scale-yearly",
+    name: "Scale",
+    monthlyPriceCents: 33915,
+    stripePriceId: "price_1UCakkJT5wh1YJ9eXGgrpxVh",
     trackedStoresLimit: 2000,
   },
 ] as const;
