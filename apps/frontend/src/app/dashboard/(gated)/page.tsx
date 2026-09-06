@@ -15,7 +15,6 @@ export default async function DashboardPage() {
   const res = await StoreServer.listSubscriptions();
 
   if (res.status === 401) redirect("/login");
-  if (res.status === 402) redirect("/dashboard/billing");
   if (!res.ok || !res.data) redirect("/login");
 
   const subscriptions = res.data;

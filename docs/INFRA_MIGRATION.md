@@ -25,8 +25,23 @@ or against the wrong volume. Don't run any step unattended.
 - Old sorrel app: separate repo (`../sorrel`), same host, own compose
   setup, multiple services (api, frontend, marketing, tracker,
   event-router, lead-gen) — check what's actually running before touching it.
-- GHCR images renamed `hyva-backend` → `sorrel-backend` — CI must build and
-  push at least once under the new tag before any deploy references it.
+- GHCR images renamed `hyva-backend` → `sorrel-backend`, plus a **new**
+  `sorrel-frontend` image — CI must build and push both at least once under
+  their new tags before any deploy references them.
+- Traefik now does real TLS (Let's Encrypt, HTTP-01 challenge) and routes
+  the frontend at `Host(usesorrel.com)` and the backend at
+  `Host(usesorrel.com) && PathPrefix(/_api)` (basicauth/IP-allowlist
+  removed — backend is intentionally public now, see
+  [[project_icp_shopify_app_makers]]). This means:
+  - **DNS must already point `usesorrel.com` at the target host's public IP
+    before Phase 5** — Traefik's ACME HTTP-01 challenge fails otherwise, and
+    the stack comes up without a valid cert.
+  - `/opt/sorrel/.env` needs `DOMAIN=usesorrel.com`,
+    `ACME_EMAIL=marijus@usesorrel.com`, and `FRONTEND_IMAGE=ghcr.io/marijusar/sorrel-frontend:latest`
+    in addition to everything already in `.env.prod.example`.
+  - Backend health is no longer at the domain root — it's
+    `https://usesorrel.com/_api/health` (Traefik strips `/_api` before
+    forwarding, the Hono route itself is still plain `/health`).
 
 ## Phase 0 — inventory (read-only, do first)
 
@@ -94,18 +109,21 @@ directory is keyed by hostname (`rabbit@$HOSTNAME`), which changes from
 
 ## Phase 5 — first deploy + cutover
 
-1. Merge the rename branch, let CI build+push `sorrel-backend:latest` at least once.
-2. Point the deploy workflow at `/opt/sorrel` (already set) and run it — pulls
-   the image, runs migrations, `up -d`.
-3. Verify: `/health`, login, store search/subscribe, dashboard — confirm the
+1. Confirm DNS: `usesorrel.com` resolves to the target host's public IP.
+2. Merge the rename branches, let CI build+push `sorrel-backend:latest` and
+   `sorrel-frontend:latest` at least once.
+3. Point the deploy workflow at `/opt/sorrel` (already set) and run it — pulls
+   both images, runs migrations, `up -d`.
+4. Verify: `https://usesorrel.com/` (frontend), `https://usesorrel.com/_api/health`
+   (backend), login, store search/subscribe, dashboard — confirm the
    restored Postgres data is actually there (existing users/subscriptions
-   show up, not an empty DB).
-4. **Stripe webhook**: if the public domain/URL changes, update the webhook
+   show up, not an empty DB), and that the cert is valid (no browser warning).
+5. **Stripe webhook**: if the public domain/URL changes, update the webhook
    endpoint in the Stripe dashboard and rotate `STRIPE_WEBHOOK_SECRET` — otherwise
    billing events silently stop arriving. (Billing is currently paused
    pending real Stripe keys, so lower urgency now, but don't forget before
    billing goes live.)
-5. Once confirmed good, remove `/opt/hyva` and the old `hyva_*` volumes.
+6. Once confirmed good, remove `/opt/hyva` and the old `hyva_*` volumes.
 
 ## Not covered here (separate decisions, ask before doing)
 

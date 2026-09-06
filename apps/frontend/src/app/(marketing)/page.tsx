@@ -6,55 +6,24 @@ import { Panel } from "@/components/marketing/panel";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { StepCard, StepPreview, StepPreviewRow } from "@/components/marketing/step-card";
 import { MaskedStore, UnlockPill } from "@/components/marketing/store-cell";
-import { TierCard } from "@/components/marketing/tier-card";
+import { TierGrid } from "@/components/marketing/tier-grid";
+import { TierPicker } from "@/components/billing/tier-picker";
 import { Button } from "@/components/ui/button";
+import { BillingPlans } from "@/lib/billing-plans";
+import { BillingServer } from "@/lib/http/billing-server";
+import { TIERS } from "@/lib/tiers";
 
 const FEED = [
   { kind: "removed", name: "Judge.me", when: "2 minutes ago", storeWidth: "w-42" },
   { kind: "removed", name: "Loox", when: "4 hours ago", storeWidth: "w-33" },
-  { kind: "added", name: "Okendo", when: "1 day ago", storeWidth: "w-49" },
+  { kind: "added", name: "Klaviyo", when: "1 day ago", storeWidth: "w-49" },
   { kind: "removed", name: "Stamped", when: "1 day ago", storeWidth: "w-37.5" },
 ] as const;
 
-const TIERS = [
-  {
-    name: "Starter",
-    price: 49,
-    tagline: "One app, one category.",
-    features: [
-      "100 stores unlocked per month",
-      "Unlimited technologies followed",
-      "Weekly change detection",
-      "Email alert on every match",
-    ],
-  },
-  {
-    name: "Growth",
-    price: 149,
-    tagline: "Outbound every week.",
-    features: [
-      "500 stores unlocked per month",
-      "Unlimited technologies followed",
-      "Weekly change detection",
-      "Email alert on every match",
-    ],
-    featured: true,
-  },
-  {
-    name: "Scale",
-    price: 399,
-    tagline: "Agencies and app portfolios.",
-    features: [
-      "2,000 stores unlocked per month",
-      "Unlimited technologies followed",
-      "Weekly change detection",
-      "Email alert on every match",
-      "CSV export and webhooks",
-    ],
-  },
-];
+export default async function LandingPage() {
+  const plansRes = await BillingServer.getPlans();
+  const plans = BillingPlans.groupByInterval(plansRes.ok && plansRes.data ? plansRes.data : []);
 
-export default function LandingPage() {
   return (
     <div className="flex flex-col">
       <section className="relative overflow-hidden">
@@ -87,15 +56,14 @@ export default function LandingPage() {
 
         <div className="relative mx-auto w-full max-w-[1000px] px-6 pt-10 pb-16 sm:pt-14 sm:pb-24">
           <Panel>
-            <div className="flex flex-wrap items-center justify-between gap-4 p-4 sm:px-5">
+            <div className="flex flex-wrap items-center gap-4 p-4 sm:px-5">
               <div className="flex flex-wrap items-center gap-2">
                 <Chip className="border-foreground/15 font-medium">Judge.me</Chip>
                 <Chip>Loox</Chip>
                 <Chip>Stamped</Chip>
-                <Chip className="hidden sm:inline-flex">Okendo</Chip>
+                <Chip className="hidden sm:inline-flex">Klaviyo</Chip>
                 <span className="text-[13px] text-muted-foreground">+2</span>
               </div>
-              <span className="text-[13px] text-muted-foreground">84 of 100 stores left this month</span>
             </div>
 
             <FeedHeader />
@@ -157,7 +125,7 @@ export default function LandingPage() {
               <div className="flex flex-wrap items-center gap-1.5">
                 <Chip className="h-6 text-xs">Judge.me</Chip>
                 <Chip className="h-6 text-xs">Loox</Chip>
-                <Chip className="h-6 text-xs">Okendo</Chip>
+                <Chip className="h-6 text-xs">Klaviyo</Chip>
               </div>
             </StepPreview>
           </StepCard>
@@ -175,7 +143,7 @@ export default function LandingPage() {
               </StepPreviewRow>
               <StepPreviewRow>
                 <EventBadge kind="added" />
-                <span className="font-medium">Okendo</span>
+                <span className="font-medium">Klaviyo</span>
                 <span className="ml-auto text-muted-foreground">1 day</span>
               </StepPreviewRow>
             </StepPreview>
@@ -184,17 +152,13 @@ export default function LandingPage() {
           <StepCard
             step={3}
             title="Unlock and reach out"
-            description="Open the stores worth working and get the storefront. Your plan sets how many a month; top-ups cover a busy week."
+            description="Open the stores worth working and get the real domain to reach out. Your plan sets how many stores you can follow at once."
           >
             <StepPreview className="gap-2.5">
               <StepPreviewRow className="gap-2.5 p-2.5">
                 <MaskedStore className="w-24" />
                 <UnlockPill className="ml-auto h-5.5 text-[11px]" />
               </StepPreviewRow>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>84 of 100 left</span>
-                <span>Resets in 12 days</span>
-              </div>
             </StepPreview>
           </StepCard>
         </div>
@@ -209,15 +173,11 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="mt-8 grid gap-4 sm:mt-12 sm:grid-cols-3 sm:gap-6">
-            {TIERS.map((tier) => (
-              <TierCard key={tier.name} {...tier} />
-            ))}
+          <div className="mt-8">
+            <TierPicker>
+              <TierGrid tiers={TIERS} plans={plans} />
+            </TierPicker>
           </div>
-
-          <p className="mt-7 text-center text-[15px] text-muted-foreground">
-            Need more mid-month? Top-up packs, no upgrade required.
-          </p>
         </div>
       </section>
 
