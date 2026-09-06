@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { SubscribeTierGrid } from "@/components/billing/subscribe-tier-grid";
 import { TierPicker } from "@/components/billing/tier-picker";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,7 +58,9 @@ export default async function BillingPage({ searchParams }: PageProps<"/dashboar
         <h1 className="text-2xl font-semibold">Choose a plan</h1>
         <p className="text-sm text-muted-foreground">Pick a plan to unlock the dashboard.</p>
       </div>
-      <TierPicker tiers={TIERS} plans={plans} cta="subscribe" />
+      <TierPicker>
+        <SubscribeTierGrid tiers={TIERS} plans={plans} />
+      </TierPicker>
     </div>
   );
 }

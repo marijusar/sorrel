@@ -6,6 +6,7 @@ import { Panel } from "@/components/marketing/panel";
 import { SectionHeading } from "@/components/marketing/section-heading";
 import { StepCard, StepPreview, StepPreviewRow } from "@/components/marketing/step-card";
 import { MaskedStore, UnlockPill } from "@/components/marketing/store-cell";
+import { TierGrid } from "@/components/marketing/tier-grid";
 import { TierPicker } from "@/components/billing/tier-picker";
 import { Button } from "@/components/ui/button";
 import { BillingPlans } from "@/lib/billing-plans";
@@ -173,7 +174,9 @@ export default async function LandingPage() {
           </div>
 
           <div className="mt-8">
-            <TierPicker tiers={TIERS} plans={plans} cta="register" />
+            <TierPicker>
+              <TierGrid tiers={TIERS} plans={plans} />
+            </TierPicker>
           </div>
         </div>
       </section>

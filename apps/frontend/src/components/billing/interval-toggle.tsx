@@ -1,21 +1,16 @@
 "use client";
 
+import { useBillingInterval } from "@/hooks/use-billing-interval";
 import { cn } from "@/lib/utils";
 
-export type BillingInterval = "monthly" | "yearly";
+export function IntervalToggle() {
+  const { interval, setBillingInterval } = useBillingInterval();
 
-export function IntervalToggle({
-  interval,
-  onChange,
-}: {
-  interval: BillingInterval;
-  onChange: (interval: BillingInterval) => void;
-}) {
   return (
     <div className="inline-flex items-center rounded-full border border-border bg-muted p-1 text-sm">
       <button
         type="button"
-        onClick={() => onChange("monthly")}
+        onClick={() => setBillingInterval("monthly")}
         className={cn(
           "cursor-pointer rounded-full px-3.5 py-1.5 font-medium transition-colors",
           interval === "monthly" ? "bg-background shadow-sm" : "text-muted-foreground",
@@ -25,7 +20,7 @@ export function IntervalToggle({
       </button>
       <button
         type="button"
-        onClick={() => onChange("yearly")}
+        onClick={() => setBillingInterval("yearly")}
         className={cn(
           "flex cursor-pointer items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium transition-colors",
           interval === "yearly" ? "bg-background shadow-sm" : "text-muted-foreground",

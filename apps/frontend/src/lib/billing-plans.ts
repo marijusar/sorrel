@@ -9,4 +9,8 @@ export class BillingPlans {
       yearly: plans.filter((plan) => plan.slug.endsWith("-yearly")),
     };
   }
+
+  static findByName(plans: Plan[], name: string): Plan | undefined {
+    return plans.find((plan) => plan.name === name);
+  }
 }
