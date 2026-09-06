@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/dashboard/app-sidebar";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { envSchema } from "@/env";
 import { AuthServer } from "@/lib/http/auth-server";
 import { PublicEnvProvider } from "@/lib/public-env";
 import { publicEnvSchema } from "@/lib/public-env-schema";
@@ -9,6 +10,8 @@ import { publicEnvSchema } from "@/lib/public-env-schema";
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   const res = await AuthServer.me();
   if (!res.ok || !res.data) redirect("/login");
+
+  if (!envSchema.parse(process.env).APP_ENABLED) redirect("/");
 
   const publicEnv = publicEnvSchema.parse({ apiUrl: process.env.API_URL });
 

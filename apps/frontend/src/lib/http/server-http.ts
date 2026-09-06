@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { parse as parseSetCookies } from "set-cookie-parser";
 import { z } from "zod";
+import { envSchema } from "@/env";
 import type { HttpResult } from "./types";
 
 const errorBodySchema = z.object({ error: z.string(), code: z.string() }).partial();
@@ -22,7 +23,7 @@ const errorBodySchema = z.object({ error: z.string(), code: z.string() }).partia
 export class ServerHttp {
   static async get<T>(path: string, schema: z.ZodType<T>): Promise<HttpResult<T>> {
     const cookieStore = await cookies();
-    const res = await fetch(`${process.env.INTERNAL_API_URL}${path}`, {
+    const res = await fetch(`${envSchema.parse(process.env).INTERNAL_API_URL}${path}`, {
       headers: { cookie: cookieStore.toString() },
       cache: "no-store",
     });
@@ -31,7 +32,7 @@ export class ServerHttp {
 
   static async post<T>(path: string, body: unknown, schema: z.ZodType<T>): Promise<HttpResult<T>> {
     const cookieStore = await cookies();
-    const res = await fetch(`${process.env.INTERNAL_API_URL}${path}`, {
+    const res = await fetch(`${envSchema.parse(process.env).INTERNAL_API_URL}${path}`, {
       method: "POST",
       headers: { "content-type": "application/json", cookie: cookieStore.toString() },
       body: JSON.stringify(body),
@@ -43,7 +44,7 @@ export class ServerHttp {
 
   static async delete<T>(path: string, schema: z.ZodType<T>): Promise<HttpResult<T>> {
     const cookieStore = await cookies();
-    const res = await fetch(`${process.env.INTERNAL_API_URL}${path}`, {
+    const res = await fetch(`${envSchema.parse(process.env).INTERNAL_API_URL}${path}`, {
       method: "DELETE",
       headers: { cookie: cookieStore.toString() },
       cache: "no-store",
