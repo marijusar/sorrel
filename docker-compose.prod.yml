@@ -92,6 +92,7 @@ services:
     environment:
       INTERNAL_API_URL: http://backend:8080
       API_URL: https://${DOMAIN}/_api
+      APP_ENABLED: ${APP_ENABLED:-true}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
