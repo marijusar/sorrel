@@ -8,15 +8,12 @@ class SyncTechnologyCatalogCommand {
   static async run(): Promise<void> {
     const logger = LoggerFactory.create("sync-technology-catalog");
     const db = DbClient.create(dbEnv.DATABASE_URL);
-    const fingerprints = new TechnologyFingerprints();
+    const fingerprints = await TechnologyFingerprints.load();
 
-    const technologies = await fingerprints.getTechnologies();
-    const categories = await fingerprints.getCategories();
-
-    const entries: CatalogEntry[] = [...technologies.entries()].map(([name, tech]) => {
-      const categoryId = tech.cats?.[0];
-      return { name, category: categoryId !== undefined ? (categories.get(categoryId) ?? null) : null };
-    });
+    const entries: CatalogEntry[] = [...fingerprints.technologies.entries()].map(([name, tech]) => ({
+      name,
+      category: tech.category,
+    }));
 
     await TechnologyCatalogRepository.upsertMany(db, entries);
     logger.info({ count: entries.length }, "technology catalog synced");

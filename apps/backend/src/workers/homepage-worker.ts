@@ -4,7 +4,7 @@ import { queueEnv } from "@/queue/env";
 import { homepageWorkerEnv } from "./homepage-worker-env.ts";
 import { LoggerFactory } from "@/logging/logger";
 import { TechnologyFingerprints } from "@/crawler/technology-fingerprints";
-import { TechnologyMatcher } from "@/crawler/technology-matcher";
+import { AhoCorasickMatcher } from "@/crawler/aho-corasick-matcher";
 import { StoreCrawler } from "@/crawler/store-crawler";
 import { HttpPageFetcher } from "@/crawler/page-fetcher";
 import { StoreRepository } from "@/modules/store/repository";
@@ -18,7 +18,7 @@ export class HomepageWorker {
     const db = DbClient.create(dbEnv.DATABASE_URL);
     const connection = new QueueConnection(queueEnv.RABBITMQ_URL, logger);
     const consumer = new HomepageCrawlConsumer(connection, logger);
-    const matcher = new TechnologyMatcher(new TechnologyFingerprints());
+    const matcher = new AhoCorasickMatcher(await TechnologyFingerprints.load());
     const publisher = new QueueTechnologyEventPublisher(connection, logger);
     const crawler = new StoreCrawler(matcher, new HttpPageFetcher(logger), publisher, logger);
 

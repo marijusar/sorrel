@@ -7,7 +7,7 @@ import { StoreTechnologyRepository } from "@/modules/store/technology-repository
 import { CloudflareChallengeDetector } from "./cloudflare-challenge-detector.ts";
 import { HomepageTextExtractor } from "./homepage-text-extractor.ts";
 import type { FetchedPage, PageFetcher } from "./page-fetcher.ts";
-import type { TechnologyMatcher } from "./technology-matcher.ts";
+import type { TechnologyDetector } from "./technology-matcher.ts";
 import type { TechnologyEventPublisher } from "@/queue/technology-event-publisher";
 import type { Logger } from "@/logging/logger";
 
@@ -15,7 +15,7 @@ export class StoreCrawler {
   private readonly logger: Logger;
 
   constructor(
-    private readonly matcher: TechnologyMatcher,
+    private readonly matcher: TechnologyDetector,
     private readonly fetcher: PageFetcher,
     private readonly publisher: TechnologyEventPublisher,
     logger: Logger,
@@ -37,7 +37,7 @@ export class StoreCrawler {
       return;
     }
 
-    const detected = await this.matcher.match(page.html);
+    const detected = this.matcher.match(page.html);
     const platform = detected.some((tech) => tech.name === "Shopify") ? "shopify" : null;
     await StoreMetadataRepository.record(db, store.id, platform, HomepageTextExtractor.extract(page.html));
 

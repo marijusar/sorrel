@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { StoreRepository } from "#src/modules/store/repository";
 import { StoreTechnologyRepository } from "#src/modules/store/technology-repository";
 import { StoreCrawler } from "#src/crawler/store-crawler";
@@ -27,8 +27,12 @@ class FakeTechnologyEventPublisher implements TechnologyEventPublisher {
 
 describe("StoreCrawler", () => {
   const testDb = new TestDatabase();
-  const matcher = new TechnologyMatcher(new TechnologyFingerprints());
   const logger = LoggerFactory.create("test");
+  let matcher: TechnologyMatcher;
+
+  beforeAll(async () => {
+    matcher = new TechnologyMatcher(await TechnologyFingerprints.load());
+  });
 
   beforeEach(async () => {
     await testDb.setup();

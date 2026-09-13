@@ -6,13 +6,13 @@ import { z } from "zod";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const vendorDir = path.join(__dirname, "..", "..", "vendor", "webappanalyzer");
 
-export const rawTechnologySchema = z.object({
+const rawTechnologySchema = z.object({
   cats: z.array(z.number()).optional(),
   html: z.array(z.string()).optional(),
   scriptSrc: z.array(z.string()).optional(),
 });
 
-export type RawTechnology = z.infer<typeof rawTechnologySchema>;
+type RawTechnology = z.infer<typeof rawTechnologySchema>;
 
 const rawCategorySchema = z.object({
   name: z.string(),
@@ -20,6 +20,14 @@ const rawCategorySchema = z.object({
 
 const technologiesFileSchema = z.record(z.string(), rawTechnologySchema);
 const categoriesFileSchema = z.record(z.string(), rawCategorySchema);
+
+export const technologySchema = z.object({
+  html: z.array(z.string()),
+  scriptSrc: z.array(z.string()),
+  category: z.string().nullable(),
+});
+
+export type Technology = z.infer<typeof technologySchema>;
 
 // Upstream patterns that misfire against real storefronts. Applied after load
 // so `sync:technologies` cannot silently revert them.
@@ -45,52 +53,38 @@ const PATTERN_OVERRIDES = new Map<string, Pick<RawTechnology, "html" | "scriptSr
   ["Zepto", { scriptSrc: ["/zepto(?:[-.][\\w.]+)?\\.js"] }],
 ]);
 
-// One instance per worker process. Loads the vendored fingerprint data
-// (vendor/webappanalyzer/, see NOTICE there for provenance/license) from
-// disk once, caches it in memory for the process lifetime — every crawled
-// page after the first reuses the same in-memory maps, no re-read/re-parse.
+// Holds the vendored fingerprint data (vendor/webappanalyzer/, see NOTICE
+// there for provenance/license) in memory. Read the vendor files once at
+// process startup via `load()` and share the resulting instance — no crawl
+// or worker cycle ever pays for a disk read or re-parse.
 export class TechnologyFingerprints {
-  private technologies: Map<string, RawTechnology> | null = null;
-  private categories: Map<number, string> | null = null;
+  private constructor(readonly technologies: Map<string, Technology>) {}
 
-  async getTechnologies(): Promise<Map<string, RawTechnology>> {
-    if (!this.technologies) {
-      await this.loadFromDisk();
-    }
-    if (!this.technologies) {
-      throw new Error("TechnologyFingerprints: technologies map still empty after loadFromDisk()");
-    }
-    return this.technologies;
-  }
-
-  async getCategories(): Promise<Map<number, string>> {
-    if (!this.categories) {
-      await this.loadFromDisk();
-    }
-    if (!this.categories) {
-      throw new Error("TechnologyFingerprints: categories map still empty after loadFromDisk()");
-    }
-    return this.categories;
-  }
-
-  private async loadFromDisk(): Promise<void> {
+  static async load(): Promise<TechnologyFingerprints> {
     const categoriesRaw = categoriesFileSchema.parse(
       JSON.parse(await fs.readFile(path.join(vendorDir, "categories.json"), "utf-8")),
     );
-    this.categories = new Map(Object.entries(categoriesRaw).map(([id, cat]) => [Number(id), cat.name]));
+    const categoryNames = new Map(Object.entries(categoriesRaw).map(([id, cat]) => [Number(id), cat.name]));
 
     const files = await fs.readdir(path.join(vendorDir, "technologies"));
-    const technologies = new Map<string, RawTechnology>();
+    const rawTechnologies = new Map<string, RawTechnology>();
     for (const file of files) {
       const raw = technologiesFileSchema.parse(
         JSON.parse(await fs.readFile(path.join(vendorDir, "technologies", file), "utf-8")),
       );
       for (const [name, tech] of Object.entries(raw)) {
-        technologies.set(name, tech);
+        rawTechnologies.set(name, tech);
       }
     }
-    TechnologyFingerprints.applyPatternOverrides(technologies);
-    this.technologies = technologies;
+    TechnologyFingerprints.applyPatternOverrides(rawTechnologies);
+
+    const technologies = new Map<string, Technology>();
+    for (const [name, tech] of rawTechnologies) {
+      const categoryId = tech.cats?.[0];
+      const category = categoryId !== undefined ? (categoryNames.get(categoryId) ?? null) : null;
+      technologies.set(name, { html: tech.html ?? [], scriptSrc: tech.scriptSrc ?? [], category });
+    }
+    return new TechnologyFingerprints(technologies);
   }
 
   private static applyPatternOverrides(technologies: Map<string, RawTechnology>): void {
