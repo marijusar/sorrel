@@ -63,6 +63,9 @@ services:
     container_name: sorrel-backend
     command: ["node", "dist/index.js"]
     labels:
+      - "ofelia.enabled=true"
+      - "ofelia.job-exec.orchestrate-crawl.schedule=@every 12h"
+      - "ofelia.job-exec.orchestrate-crawl.command=node dist/scripts/orchestrate-crawl.js"
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && PathPrefix(`/_api`)"
       - "traefik.http.routers.backend.entrypoints=websecure"
@@ -99,6 +102,18 @@ services:
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=le"
       - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    depends_on:
+      - backend
+    networks:
+      - sorrel-network
+
+  ofelia:
+    image: mcuadros/ofelia:latest
+    container_name: sorrel-ofelia
+    restart: unless-stopped
+    command: daemon --docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
       - backend
     networks:
