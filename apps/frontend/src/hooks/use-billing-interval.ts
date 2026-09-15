@@ -3,7 +3,7 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { z } from "zod";
 
-const intervalSchema = z.enum(["monthly", "yearly"]).catch("yearly");
+const intervalSchema = z.enum(["monthly", "yearly"]).catch("monthly");
 
 export type BillingInterval = z.infer<typeof intervalSchema>;
 
