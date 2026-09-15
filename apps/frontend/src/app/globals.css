@@ -92,3 +92,55 @@
     @apply font-sans;
   }
 }
+
+.prose-blog {
+  @apply text-[17px] leading-7.5 text-foreground;
+
+  & > * + * {
+    @apply mt-5;
+  }
+
+  & h2 {
+    @apply mt-10 font-heading text-2xl leading-8 font-medium tracking-tight text-pretty;
+  }
+
+  & h3 {
+    @apply mt-8 font-heading text-xl leading-7 font-medium tracking-tight text-pretty;
+  }
+
+  & p {
+    @apply text-pretty;
+  }
+
+  & a {
+    @apply text-foreground underline underline-offset-4 hover:no-underline;
+  }
+
+  & ul {
+    @apply list-disc pl-5;
+  }
+
+  & ol {
+    @apply list-decimal pl-5;
+  }
+
+  & li + li {
+    @apply mt-1.5;
+  }
+
+  & blockquote {
+    @apply border-l-2 border-border pl-4 text-muted-foreground italic;
+  }
+
+  & code {
+    @apply rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em];
+  }
+
+  & pre {
+    @apply overflow-x-auto rounded-lg bg-muted p-4;
+  }
+
+  & pre code {
+    @apply bg-transparent p-0;
+  }
+}

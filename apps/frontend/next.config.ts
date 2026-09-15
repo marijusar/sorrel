@@ -3,6 +3,9 @@ import path from "node:path";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
+  },
   // Docker build context is the pnpm workspace root (two levels up from
   // this file) — without this, Next only traces apps/frontend and misses
   // the hoisted workspace-root node_modules the standalone bundle needs.
